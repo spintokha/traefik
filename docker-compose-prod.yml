@@ -1,0 +1,61 @@
+services:
+  traefik:
+    # Fixed container name
+    container_name: traefik
+
+    # Use the official Traefik image
+    image: traefik:v2.10.7
+
+    # Configure Traefik with CLI arguments
+    command:
+      # Enable Docker as configuration provider
+      - "--providers.docker"
+
+      # Require explicit labels to expose containers
+      - "--providers.docker.exposedbydefault=false"
+
+      # Define the HTTP entrypoint on port 80
+      - "--entrypoints.web.address=:80"
+
+      # Define the HTTPS entrypoint on port 443
+      - "--entrypoints.websecure.address=:443"
+
+      # Enable HTTP challenge for Let's Encrypt
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+
+      # OPTIONAL: Uncomment for Let's Encrypt staging (useful for testing)
+      # - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+
+      # Email for Let's Encrypt registration and recovery
+      - "--certificatesresolvers.myresolver.acme.email=spintokha@gmail.com"
+
+      # Where to store issued certificates (persistent)
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+
+      # Redirect all HTTP to HTTPS automatically
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+
+    # Connect to the shared network for routing
+    networks:
+      - vps-traefik
+
+    # Always restart the container on failure
+    restart: always
+
+    # Expose ports 80 and 443
+    ports:
+      - "80:80"
+      - "443:443"
+
+    volumes:
+      # Read-only Docker socket so Traefik can watch containers
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+      # Persist Let's Encrypt certificates
+      - "./letsencrypt:/letsencrypt"
+
+networks:
+  vps-traefik:
+    name: vps-traefik
