@@ -12,12 +12,16 @@ Traefik automatically:
 ## Quick Start
 
 ```bash
-# Development
-make up-dev      # Start dev environment
+# 1. Initialize environment (creates .env file)
+make setup
 
-# Production (first time setup)
-make setup-prod  # Create letsencrypt directory (required before first run)
-make up-prod     # Start production environment
+# 2. Edit .env and set ENV=local or ENV=prod
+
+# 3. If you set ENV=prod, run setup again to initialize Let's Encrypt
+make setup
+
+# 4. Start environment
+make up
 ```
 
 ---
@@ -30,9 +34,34 @@ make up-prod     # Start production environment
 ├── docker-compose-prod.yml      # Production configuration
 ├── letsencrypt/                 # Stores Let's Encrypt certificates
 ├── Makefile                     # Convenient management commands
+├── .env.example                 # Example environment configuration
 ├── .gitignore                   # Git exclusions
 └── README.md
 ```
+
+---
+
+## Environment Configuration
+
+The project uses a `.env` file for environment switching. Create it with:
+
+```bash
+make setup
+```
+
+**Available variables:**
+- `ENV` - Set to `local` or `prod` (default: `local`)
+- `LETSENCRYPT_EMAIL` - Your email for Let's Encrypt certificates (production only)
+
+**Example `.env`:**
+```env
+ENV=local
+LETSENCRYPT_EMAIL=you@example.com
+```
+
+After editing `.env`, run `make setup` again if switching to production (it will create the letsencrypt directory).
+
+Once configured, all commands automatically use the correct environment based on your `ENV` setting.
 
 ---
 
@@ -47,28 +76,26 @@ make up-prod     # Start production environment
 
 ## 🛠️ Local Development
 
-By default, the development stack:
+The local development stack:
 
 - Exposes Traefik dashboard (insecure) on port `8080`
 - Routes HTTP traffic on port `8000`
 - Logs in debug mode
 - Does **not** redirect HTTP to HTTPS
 
-### Common Development Commands
+**To use local environment:**
 
 ```bash
-make up-dev        # Start development stack
-make down-dev      # Stop development stack
-make restart-dev   # Restart development stack
-make logs-dev      # View logs (follow mode)
-make ps-dev        # Show container status
+# Set ENV=local in .env file
+echo "ENV=local" > .env
+
+# Start
+make up
 ```
 
-### Access Traefik Dashboard
+**Access Traefik Dashboard:** [http://localhost:8080](http://localhost:8080)
 
-Visit [http://localhost:8080](http://localhost:8080)
-
-> ⚠️ **Note:** The insecure dashboard is enabled for development only. Do not enable it in production.
+> ⚠️ **Note:** The insecure dashboard is enabled for local development only. Do not enable it in production.
 
 ---
 
@@ -84,27 +111,31 @@ The production configuration:
 
 ### Before deploying:
 
-1. **Initialize Let's Encrypt directory** (one-time setup):
+1. **Initialize and configure** environment:
 
    ```bash
-   make setup-prod
+   make setup  # Creates .env file
    ```
 
-2. **Update the email address** for Let's Encrypt registration in `docker-compose-prod.yml`:
+2. **Edit .env** and set production environment:
 
-   ```yaml
-   - "--certificatesresolvers.myresolver.acme.email=you@example.com"
+   ```env
+   ENV=prod
+   LETSENCRYPT_EMAIL=you@example.com
    ```
 
-### Common Production Commands
+3. **Run setup again** to initialize Let's Encrypt:
+
+   ```bash
+   make setup  # Creates letsencrypt directory for prod
+   ```
+
+### Start Production
 
 ```bash
-make up-prod       # Start production stack
-make down-prod     # Stop production stack
-make restart-prod  # Restart production stack
-make logs-prod     # View logs (follow mode)
-make ps-prod       # Show container status
-make status        # Show all stacks status
+make up        # Starts production (based on ENV=prod)
+make logs      # View logs
+make status    # Check status
 ```
 
 ---
@@ -113,35 +144,20 @@ make status        # Show all stacks status
 
 Run `make` or `make help` to see all available commands.
 
-### Development Commands
-| Command           | Description                        |
-| ----------------- | ---------------------------------- |
-| `make up-dev`     | Start development stack            |
-| `make down-dev`   | Stop development stack             |
-| `make restart-dev`| Restart development stack          |
-| `make logs-dev`   | Show logs (follow mode)            |
-| `make ps-dev`     | Show dev container status          |
-| `make clean-dev`  | Stop dev and remove volumes        |
+| Command           | Description                                      |
+| ----------------- | ------------------------------------------------ |
+| `make setup`      | Initialize environment (create .env, setup prod if needed) |
+| `make up`         | Start environment (local or prod)                |
+| `make down`       | Stop environment                                 |
+| `make restart`    | Restart environment                              |
+| `make logs`       | Show logs (follow mode)                          |
+| `make ps`         | Show container status                            |
+| `make clean`      | Stop and remove volumes                          |
+| `make pull`       | Pull latest images                               |
+| `make status`     | Show all stacks status                           |
+| `make help`       | Show help menu                                   |
 
-### Production Commands
-| Command           | Description                        |
-| ----------------- | ---------------------------------- |
-| `make up-prod`    | Start production stack             |
-| `make down-prod`  | Stop production stack              |
-| `make restart-prod`| Restart production stack          |
-| `make logs-prod`  | Show logs (follow mode)            |
-| `make ps-prod`    | Show prod container status         |
-| `make clean-prod` | Stop prod and remove volumes       |
-| `make setup-prod` | Initialize letsencrypt directory   |
-
-### Maintenance Commands
-| Command           | Description                        |
-| ----------------- | ---------------------------------- |
-| `make pull-dev`   | Pull latest dev images             |
-| `make pull-prod`  | Pull latest prod images            |
-| `make pull-all`   | Pull all images                    |
-| `make status`     | Show all container statuses        |
-| `make help`       | Show help menu                     |
+**Note:** All commands use the `ENV` variable from your `.env` file to determine which environment to use (local or prod).
 
 ---
 

@@ -4,68 +4,73 @@
 
 .DEFAULT_GOAL := help
 
-# --- Development Commands ---
-up-dev:
-	docker compose -f docker-compose-local.yml up -d
+# Load .env file if it exists
+-include .env
+export
 
-down-dev:
-	docker compose -f docker-compose-local.yml down
+# Set default environment if not specified
+ENV ?= local
 
-restart-dev:
-	docker compose -f docker-compose-local.yml restart
+# Determine which compose file to use based on ENV
+ifeq ($(ENV),prod)
+    COMPOSE_FILE = docker-compose-prod.yml
+else
+    COMPOSE_FILE = docker-compose-local.yml
+endif
 
-logs-dev:
-	docker compose -f docker-compose-local.yml logs -f
+# --- Main Commands ---
+up:
+	@echo "Starting $(ENV) environment..."
+	docker compose -f $(COMPOSE_FILE) up -d
 
-ps-dev:
-	docker compose -f docker-compose-local.yml ps
+down:
+	@echo "Stopping $(ENV) environment..."
+	docker compose -f $(COMPOSE_FILE) down
 
-# --- Production Commands ---
-up-prod:
-	docker compose -f docker-compose-prod.yml up -d
+restart:
+	@echo "Restarting $(ENV) environment..."
+	docker compose -f $(COMPOSE_FILE) restart
 
-down-prod:
-	docker compose -f docker-compose-prod.yml down
+logs:
+	@echo "Showing logs for $(ENV) environment..."
+	docker compose -f $(COMPOSE_FILE) logs -f
 
-restart-prod:
-	docker compose -f docker-compose-prod.yml restart
+ps:
+	@echo "Status for $(ENV) environment:"
+	docker compose -f $(COMPOSE_FILE) ps
 
-logs-prod:
-	docker compose -f docker-compose-prod.yml logs -f
+clean:
+	@echo "Cleaning $(ENV) environment (removing volumes)..."
+	docker compose -f $(COMPOSE_FILE) down -v
 
-ps-prod:
-	docker compose -f docker-compose-prod.yml ps
+pull:
+	@echo "Pulling images for $(ENV) environment..."
+	docker compose -f $(COMPOSE_FILE) pull
 
 # --- Setup & Maintenance ---
-setup-prod:
-	@echo "Setting up production environment..."
-	@mkdir -p letsencrypt
-	@touch letsencrypt/acme.json
-	@chmod 600 letsencrypt/acme.json
-	@echo "Production setup complete! letsencrypt/acme.json created with correct permissions."
-
-pull-dev:
-	docker compose -f docker-compose-local.yml pull
-
-pull-prod:
-	docker compose -f docker-compose-prod.yml pull
-
-pull-all:
-	docker compose -f docker-compose-local.yml pull
-	docker compose -f docker-compose-prod.yml pull
+setup:
+	@echo "Setting up $(ENV) environment..."
+	@if [ ! -f .env ]; then \
+		cp .env.example .env; \
+		echo "Created .env from .env.example"; \
+	else \
+		echo ".env already exists"; \
+	fi
+	@if [ "$(ENV)" = "prod" ]; then \
+		mkdir -p letsencrypt; \
+		touch letsencrypt/acme.json; \
+		chmod 600 letsencrypt/acme.json; \
+		echo "Production setup complete! letsencrypt/acme.json created."; \
+	else \
+		echo "Local setup complete!"; \
+	fi
 
 status:
-	@echo "=== Development Stack ==="
-	@docker compose -f docker-compose-local.yml ps 2>/dev/null || echo "No dev containers running"
+	@echo "=== Local Stack ==="
+	@docker compose -f docker-compose-local.yml ps 2>/dev/null || echo "No local containers running"
 	@echo ""
 	@echo "=== Production Stack ==="
 	@docker compose -f docker-compose-prod.yml ps 2>/dev/null || echo "No prod containers running"
-
-clean-dev:
-	docker compose -f docker-compose-local.yml down -v
-
-clean-prod:
-	docker compose -f docker-compose-prod.yml down -v
 
 # --- Help ---
 help:
@@ -73,26 +78,22 @@ help:
 	@echo "Traefik Docker Compose Management"
 	@echo "=================================="
 	@echo ""
-	@echo "Development:"
-	@echo "  make up-dev          Start development stack"
-	@echo "  make down-dev        Stop development stack"
-	@echo "  make restart-dev     Restart development stack"
-	@echo "  make logs-dev        Show logs for dev (follow mode)"
-	@echo "  make ps-dev          Show dev container status"
-	@echo "  make clean-dev       Stop dev and remove volumes"
+	@echo "Current ENV: $(ENV) → using $(COMPOSE_FILE)"
 	@echo ""
-	@echo "Production:"
-	@echo "  make up-prod         Start production stack"
-	@echo "  make down-prod       Stop production stack"
-	@echo "  make restart-prod    Restart production stack"
-	@echo "  make logs-prod       Show logs for prod (follow mode)"
-	@echo "  make ps-prod         Show prod container status"
-	@echo "  make clean-prod      Stop prod and remove volumes"
-	@echo "  make setup-prod      Initialize letsencrypt directory"
+	@echo "Commands:"
+	@echo "  make setup           Initialize environment (creates .env, sets up prod if needed)"
+	@echo "  make up              Start environment"
+	@echo "  make down            Stop environment"
+	@echo "  make restart         Restart environment"
+	@echo "  make logs            Show logs (follow mode)"
+	@echo "  make ps              Show container status"
+	@echo "  make clean           Stop and remove volumes"
+	@echo "  make pull            Pull latest images"
+	@echo "  make status          Show all stacks status"
 	@echo ""
-	@echo "Maintenance:"
-	@echo "  make pull-dev        Pull latest dev images"
-	@echo "  make pull-prod       Pull latest prod images"
-	@echo "  make pull-all        Pull all images"
-	@echo "  make status          Show all container statuses"
+	@echo "Quick Start:"
+	@echo "  1. Run 'make setup' to create .env file"
+	@echo "  2. Edit .env and set ENV=local or ENV=prod"
+	@echo "  3. Run 'make setup' again if switching to prod"
+	@echo "  4. Run 'make up' to start"
 	@echo ""
