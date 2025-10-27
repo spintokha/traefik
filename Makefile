@@ -18,7 +18,24 @@ else
     COMPOSE_FILE = docker-compose-local.yml
 endif
 
-# --- Main Commands ---
+# --- Setup & Maintenance ---
+setup:
+	@echo "Setting up $(ENV) environment..."
+	@if [ ! -f .env ]; then \
+		cp .env.example .env; \
+		echo "Created .env from .env.example"; \
+	else \
+		echo ".env already exists"; \
+	fi
+	@if [ "$(ENV)" = "prod" ]; then \
+		mkdir -p letsencrypt; \
+		touch letsencrypt/acme.json; \
+		chmod 600 letsencrypt/acme.json; \
+		echo "Production setup complete! letsencrypt/acme.json created."; \
+	else \
+		echo "Local setup complete!"; \
+	fi
+
 up:
 	@echo "Starting $(ENV) environment..."
 	docker compose -f $(COMPOSE_FILE) up -d
@@ -47,29 +64,10 @@ pull:
 	@echo "Pulling images for $(ENV) environment..."
 	docker compose -f $(COMPOSE_FILE) pull
 
-# --- Setup & Maintenance ---
-setup:
-	@echo "Setting up $(ENV) environment..."
-	@if [ ! -f .env ]; then \
-		cp .env.example .env; \
-		echo "Created .env from .env.example"; \
-	else \
-		echo ".env already exists"; \
-	fi
-	@if [ "$(ENV)" = "prod" ]; then \
-		mkdir -p letsencrypt; \
-		touch letsencrypt/acme.json; \
-		chmod 600 letsencrypt/acme.json; \
-		echo "Production setup complete! letsencrypt/acme.json created."; \
-	else \
-		echo "Local setup complete!"; \
-	fi
-
 status:
 	@echo "=== $(ENV) Stack ==="
 	@docker compose -f $(COMPOSE_FILE) ps
 
-# --- Help ---
 help:
 	@echo ""
 	@echo "Traefik Docker Compose Management"
