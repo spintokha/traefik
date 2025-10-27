@@ -66,11 +66,8 @@ setup:
 	fi
 
 status:
-	@echo "=== Local Stack ==="
-	@docker compose -f docker-compose-local.yml ps 2>/dev/null || echo "No local containers running"
-	@echo ""
-	@echo "=== Production Stack ==="
-	@docker compose -f docker-compose-prod.yml ps 2>/dev/null || echo "No prod containers running"
+	@echo "=== $(ENV) Stack ==="
+	@docker compose -f $(COMPOSE_FILE) ps
 
 # --- Help ---
 help:
