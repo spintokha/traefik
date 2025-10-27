@@ -1,1 +1,29 @@
+# IDE
 .idea
+.vscode
+*.swp
+*.swo
+*~
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Let's Encrypt certificates (sensitive data)
+letsencrypt/
+acme.json
+
+# Logs
+*.log
+logs/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.bak
+.~lock.*
