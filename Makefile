@@ -4,23 +4,23 @@
 
 # --- Dev
 up-dev:
-	docker-compose -f docker-compose-local.yml up -d
+	docker compose -f docker-compose-local.yml up -d
 
 down-dev:
-	docker-compose -f docker-compose-local.yml down
+	docker compose -f docker-compose-local.yml down
 
 logs-dev:
-	docker-compose -f docker-compose-local.yml logs -f
+	docker compose -f docker-compose-local.yml logs -f
 
 # --- Production
 up-prod:
-	docker-compose -f docker-compose-prod.yml up -d
+	docker compose -f docker-compose-prod.yml up -d
 
 down-prod:
-	docker-compose -f docker-compose-prod.yml down
+	docker compose -f docker-compose-prod.yml down
 
 logs-prod:
-	docker-compose -f docker-compose-prod.yml logs -f
+	docker compose -f docker-compose-prod.yml logs -f
 
 help:
 	@echo ""
