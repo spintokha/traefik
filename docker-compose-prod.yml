@@ -4,7 +4,7 @@ services:
     container_name: traefik
 
     # Use the official Traefik image
-    image: traefik:v2.10.7
+    image: traefik:v3.0
 
     # Configure Traefik with CLI arguments
     command:
